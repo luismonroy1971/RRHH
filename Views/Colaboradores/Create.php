@@ -1,3 +1,13 @@
+<?php
+// Verificar si la sesión no está iniciada
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
+// Obtener valores de sesión
+$nombreUsuario = $_SESSION['username'] ?? 'Usuario';
+$rolUsuario = $_SESSION['role'] ?? 'INVITADO';
+?>
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -73,9 +83,23 @@
         .button.cancel:hover {
             background-color: #5a6268;
         }
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #343a40;
+            color: #fff;
+            padding: 10px 20px;
+    }
+    .top-bar a { color: #f8d7da; text-decoration: none; font-weight: 600; }
+    .top-bar a:hover { color: #fff; }
     </style>
 </head>
 <body>
+<div class="top-bar">
+        <a href="/colaboradores">← Retornar Gestión de Colaboradores</a>
+        <div><?= htmlspecialchars($nombreUsuario) ?> | Perfil: <?= htmlspecialchars($rolUsuario) ?></div>
+</div>
     <div class="container">
         <h1>Agregar Colaborador</h1>
         <form action="/colaboradores" method="POST">

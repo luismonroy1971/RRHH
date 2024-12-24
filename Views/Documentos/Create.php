@@ -1,4 +1,15 @@
+<?php
+// Verificar si la sesión no está iniciada
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
+// Obtener valores de sesión
+$nombreUsuario = $_SESSION['username'] ?? 'Usuario';
+$rolUsuario = $_SESSION['role'] ?? 'INVITADO';
+?>
 <style>
+    body { font-family: Arial, sans-serif; background-color: #f8f9fa; margin: 0; padding: 0; }
     .container {
         max-width: 600px;
         margin: 50px auto;
@@ -67,7 +78,16 @@
         background-color: #5a6268;
     }
 
-
+    .top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #343a40;
+            color: #fff;
+            padding: 10px 20px;
+    }
+    .top-bar a { color: #f8d7da; text-decoration: none; font-weight: 600; }
+    .top-bar a:hover { color: #fff; }
 </style>
 
 <!DOCTYPE html>
@@ -78,6 +98,11 @@
     <title>Agregar Documento</title>
 </head>
 <body>
+    <!-- Barra Superior -->
+ <div class="top-bar">
+        <a href="/documentos">← Retornar Gestión de Documentos</a>
+        <div><?= htmlspecialchars($nombreUsuario) ?> | Perfil: <?= htmlspecialchars($rolUsuario) ?></div>
+</div>
     <div class="container">
         <h2>Agregar Documento</h2>
         <form action="/documentos" method="POST">

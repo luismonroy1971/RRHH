@@ -19,17 +19,17 @@ try {
 // Usuarios que queremos insertar
 $usuarios = [
     [
-        'nombre_usuario' => 'admin',
+        'nombre_usuario' => 'admin1',
         'contrasena' => 'admin123',
         'rol' => 'admin'
     ],
     [
-        'nombre_usuario' => 'rrhh_user',
+        'nombre_usuario' => 'rrhh_user1',
         'contrasena' => 'rrhh123',
         'rol' => 'rrhh'
     ],
     [
-        'nombre_usuario' => 'nominas_user',
+        'nombre_usuario' => 'nominas_user1',
         'contrasena' => 'nominas123',
         'rol' => 'nominas'
     ]

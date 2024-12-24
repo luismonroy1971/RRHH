@@ -13,9 +13,9 @@ class Database
     protected function __construct()
     {
         $host = 'localhost';
-        $dbname = 'u220252535_rr';
-        $username = 'u220252535_rr';
-        $password = 'Lm@03051971';
+        $dbname = 'gestor_rrhh';
+        $username = 'root';
+        $password = '';
 
         try {
             $this->connection = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8mb4", $username, $password);

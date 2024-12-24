@@ -1,3 +1,13 @@
+<?php
+// Verificar si la sesión no está iniciada
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
+// Obtener valores de sesión
+$nombreUsuario = $_SESSION['username'] ?? 'Usuario';
+$rolUsuario = $_SESSION['role'] ?? 'INVITADO';
+?>
 <style>
     body {
         font-family: "Open Sans", Arial, sans-serif;
@@ -67,8 +77,23 @@
     button[type="submit"]:hover {
         background: #0056b3;
     }
-</style>
 
+    .top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #343a40;
+            color: #fff;
+            padding: 10px 20px;
+    }
+    .top-bar a { color: #f8d7da; text-decoration: none; font-weight: 600; }
+    .top-bar a:hover { color: #fff; }
+</style>
+ <!-- Barra Superior -->
+ <div class="top-bar">
+        <a href="/usuarios">← Retornar Gestión de Usuarios</a>
+        <div><?= htmlspecialchars($nombreUsuario) ?> | Perfil: <?= htmlspecialchars($rolUsuario) ?></div>
+</div>
 <div class="container">
     <h2>Editar Usuario</h2>
     <form action="/usuarios/update/<?= htmlspecialchars($usuario['ID']) ?>" method="POST">

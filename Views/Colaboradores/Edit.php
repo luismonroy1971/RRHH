@@ -1,3 +1,13 @@
+<?php
+// Verificar si la sesión no está iniciada
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
+// Obtener valores de sesión
+$nombreUsuario = $_SESSION['username'] ?? 'Usuario';
+$rolUsuario = $_SESSION['role'] ?? 'INVITADO';
+?>
 <style>
 /* Estilos Generales */
 body {
@@ -156,7 +166,20 @@ form button {
     background-color: #f8d7da;
     color: #721c24;
 }
-
+.button {
+        padding: 6px 12px;
+        font-size: 0.8rem;
+    }
+    .top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #343a40;
+            color: #fff;
+            padding: 10px 20px;
+    }
+    .top-bar a { color: #f8d7da; text-decoration: none; font-weight: 600; }
+    .top-bar a:hover { color: #fff; }
 /* Responsive */
 @media (max-width: 768px) {
     .container {
@@ -175,6 +198,16 @@ form button {
         padding: 6px 12px;
         font-size: 0.8rem;
     }
+    .top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #343a40;
+            color: #fff;
+            padding: 10px 20px;
+    }
+    .top-bar a { color: #f8d7da; text-decoration: none; font-weight: 600; }
+    .top-bar a:hover { color: #fff; }
 }
 
 </style>
@@ -186,6 +219,10 @@ form button {
     <title>Editar Colaborador</title>
 </head>
 <body>
+<div class="top-bar">
+        <a href="/colaboradores">← Retornar Gestión de Colaboradores</a>
+        <div><?= htmlspecialchars($nombreUsuario) ?> | Perfil: <?= htmlspecialchars($rolUsuario) ?></div>
+</div>
     <div class="container">
         <h2>Editar Colaborador</h2>
         <form action="/colaboradores/update" method="POST">
