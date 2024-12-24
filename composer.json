@@ -1,0 +1,25 @@
+{
+    "name": "lmonroy/gestor",
+    "description": "Gestor de documentos para recursos humanos.",
+    "type": "project",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Luis Monroy",
+            "email": "luismonroy1971@gmail.com"
+        }
+    ],
+    "minimum-stability": "stable",
+    "require": {
+        "thiagoalessio/tesseract_ocr": "^2.13",
+        "altorouter/altorouter": "^2.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Libs\\": "Libs/",
+            "Models\\": "Models/",
+            "Controllers\\": "Controllers/"
+        }
+    }
+}
+
