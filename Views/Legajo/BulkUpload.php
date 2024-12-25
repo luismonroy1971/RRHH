@@ -177,14 +177,13 @@ if ($rolUsuario !== 'NOMINAS') {
             <input type="file" id="fileInput" class="file-input" webkitdirectory directory multiple accept=".pdf">
             <p>Haga clic aquí para seleccionar una carpeta</p>
             <small>O arrastre y suelte una carpeta aquí</small>
-            <div class="replace-option" style="text-align: center; margin: 20px 0;">
-                <label style="cursor: pointer;">
-                    <input type="checkbox" id="replaceIfExists" style="margin-right: 8px;">
-                    Reemplazar si Existe
-                </label>
-            </div>
         </div>
-
+        <div class="replace-option" style="text-align: center; margin: 20px 0;">
+            <label style="cursor: pointer;">
+                <input type="checkbox" id="replaceIfExists" style="margin-right: 8px;">
+                Reemplazar si Existe
+            </label>
+        </div>
         <div id="downloadArea" style="text-align: center; margin: 20px 0; display: none;">
             <button id="downloadButton" class="add-button">
                 Descargar Registros No Procesados
@@ -361,12 +360,11 @@ if ($rolUsuario !== 'NOMINAS') {
             downloadArea.style.display = 'block';
         }
 
-        // Modificar la función handleFiles
         async function handleFiles(files) {
             processing.style.display = 'block';
             resultBox.style.display = 'none';
             downloadArea.style.display = 'none';
-            notProcessedRecords = []; // Limpiar registros anteriores
+            notProcessedRecords = [];
             
             let success = 0;
             let errors = [];
@@ -376,6 +374,8 @@ if ($rolUsuario !== 'NOMINAS') {
                     errors.push(`${file.name} no es un archivo PDF`);
                     continue;
                 }
+
+                let fileInfo = null; // Declarar fileInfo fuera del try
 
                 try {
                     const fileInfo = processFileName(file.name);
@@ -389,32 +389,49 @@ if ($rolUsuario !== 'NOMINAS') {
                         tipo_documento: colaborador.tipoDocumento,
                         n_documento: colaborador.nDocumento,
                         documento_id: documentoId,
-                        ejercicio: ejercicioNum,    // Ahora aseguramos que es numérico
-                        periodo: periodoNum         // Ahora aseguramos que es numérico
+                        ejercicio: ejercicioNum,
+                        periodo: periodoNum
                     };
+
                     // Verificar existencia
                     const exists = await verificarExistencia(datos);
                     
-                    if (exists && !replaceCheckbox.checked) {
-                        // Agregar a registros no procesados
-                        notProcessedRecords.push({
-                            fileName: file.name,
-                            apellidosNombres: fileInfo.apellidosNombres,
-                            documento: fileInfo.documento,
-                            ejercicio: fileInfo.ejercicio,
-                            periodo: fileInfo.periodo,
-                            reason: 'Registro existente y no se marcó reemplazo'
-                        });
-                        continue;
+                    if (exists) {
+                        if (replaceCheckbox.checked) {
+                            // Si existe y está marcado el checkbox de reemplazo
+                            // Primero eliminamos el registro existente
+                            const deleteResponse = await fetch('/legajo/delete-by-combination', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                },
+                                body: JSON.stringify(datos)
+                            });
+
+                            if (!deleteResponse.ok) {
+                                throw new Error('Error al eliminar registro existente');
+                            }
+                        } else {
+                            // Si existe y no está marcado el checkbox
+                            notProcessedRecords.push({
+                                fileName: file.name,
+                                apellidosNombres: fileInfo.apellidosNombres,
+                                documento: fileInfo.documento,
+                                ejercicio: fileInfo.ejercicio,
+                                periodo: fileInfo.periodo,
+                                reason: 'Registro existente y no se marcó reemplazo'
+                            });
+                            continue;
+                        }
                     }
 
+                    // Crear el nuevo registro
                     const formData = new FormData();
                     for (let [key, value] of Object.entries(datos)) {
                         formData.append(key, value);
                     }
                     formData.append('apellidos_nombres', fileInfo.apellidosNombres);
                     formData.append('emitido', file);
-                    formData.append('replace_if_exists', replaceCheckbox.checked);
 
                     const response = await fetch('/legajo/create', {
                         method: 'POST',
@@ -439,6 +456,7 @@ if ($rolUsuario !== 'NOMINAS') {
                 }
             }
 
+ 
             // Mostrar resultados
             processing.style.display = 'none';
             resultBox.style.display = 'block';

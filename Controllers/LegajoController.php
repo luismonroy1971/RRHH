@@ -388,4 +388,31 @@ class LegajoController
             return [];
         }
     }
+    // En LegajoController.php
+    public static function deleteByCombination()
+    {
+        try {
+            $data = json_decode(file_get_contents('php://input'), true);
+            
+            if (!$data) {
+                return Response::json(['error' => 'Datos no proporcionados'], 400);
+            }
+
+            $result = Legajo::deleteByCombination(
+                $data['tipo_documento'],
+                $data['n_documento'],
+                $data['documento_id'],
+                $data['ejercicio'],
+                $data['periodo']
+            );
+
+            if ($result) {
+                return Response::json(['message' => 'Registro eliminado correctamente']);
+            } else {
+                return Response::json(['error' => 'Error al eliminar el registro'], 500);
+            }
+        } catch (Exception $e) {
+            return Response::json(['error' => $e->getMessage()], 500);
+        }
+    }
 }

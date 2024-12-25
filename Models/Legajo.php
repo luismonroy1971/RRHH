@@ -285,4 +285,27 @@ class Legajo
     {
         return Database::delete("DELETE FROM legajo WHERE ID = ?", [$id]);
     }
+    // En Legajo.php
+    public static function deleteByCombination($tipoDocumento, $nDocumento, $documentoId, $ejercicio, $periodo)
+    {
+        try {
+            $sql = "DELETE FROM legajo WHERE 
+                    TIPO_DOCUMENTO = ? AND 
+                    N_DOCUMENTO = ? AND 
+                    DOCUMENTO_ID = ? AND 
+                    EJERCICIO = ? AND 
+                    PERIODO = ?";
+                    
+            return Database::delete($sql, [
+                $tipoDocumento,
+                $nDocumento,
+                $documentoId,
+                $ejercicio,
+                $periodo
+            ]);
+        } catch (Exception $e) {
+            error_log("Error en deleteByCombination: " . $e->getMessage());
+            throw $e;
+        }
+    }
 }

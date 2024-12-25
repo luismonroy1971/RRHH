@@ -162,7 +162,10 @@ try {
                 }
             } elseif ($action === 'edit' && isset($id)) {
                 Controllers\LegajoController::edit($id);
-            } else {
+            // En el case 'legajo':
+            } elseif ($action === 'delete-by-combination' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+                Controllers\LegajoController::deleteByCombination();
+            }else {
                 http_response_code(404);
                 echo json_encode(['error' => 'Ruta no encontrada', 'ruta' => $path]);
             }

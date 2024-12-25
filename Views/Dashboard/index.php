@@ -153,6 +153,15 @@ $rolUsuario = $_SESSION['role'] ?? 'INVITADO';
                         </a>
                     </li>
                 <?php endif; ?>
+                <?php if ($rolUsuario === 'NOMINAS'): ?>
+                    <li>
+                    <a href="/legajo/bulk-upload">
+                        <span class="icon">📁</span>
+                        Subida Masiva de Documentos
+                    </a>
+                </li>
+
+                <?php endif; ?>
                 <li>
                     <a href="/legajo">
                         <span class="icon">📁</span>
