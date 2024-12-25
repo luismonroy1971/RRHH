@@ -5,6 +5,7 @@
 namespace Models;
 
 use \Libs\Database;
+use \Exception;
 
 class Colaborador
 {
@@ -56,5 +57,15 @@ class Colaborador
     public static function delete($id)
     {
         return Database::delete("DELETE FROM colaboradores WHERE ID = ?", [$id]);
+    }
+    public static function findByName($nombre)
+    {
+        try {
+            $sql = "SELECT * FROM colaboradores WHERE APELLIDOS_NOMBRES = ?";
+            return Database::query($sql, [$nombre]);
+        } catch (Exception $e) {
+            error_log("Error en findByName: " . $e->getMessage());
+            return null;
+        }
     }
 }

@@ -10,6 +10,31 @@ use Exception;
 class LegajoController
 {
 
+    // En LegajoController.php
+    public static function verificarExistencia()
+    {
+        $tipoDocumento = $_GET['tipo_documento'] ?? null;
+        $nDocumento = $_GET['n_documento'] ?? null;
+        $documentoId = $_GET['documento_id'] ?? null;
+        $ejercicio = $_GET['ejercicio'] ?? null;
+        $periodo = $_GET['periodo'] ?? null;
+
+        $exists = Legajo::existeCombinacion([
+            'tipo_documento' => $tipoDocumento,
+            'n_documento' => $nDocumento,
+            'documento_id' => $documentoId,
+            'ejercicio' => $ejercicio,
+            'periodo' => $periodo
+        ]);
+
+        return Response::json(['exists' => $exists]);
+    }
+
+    // En LegajoController.php
+    public static function validateFileName($fileName) {
+        $pattern = '/^.+ - \d{4} - \d{1,2} - .+ - \d{14}\.pdf$/';
+        return preg_match($pattern, $fileName);
+    }
     public static function getAllSimple()
     {
         session_start();

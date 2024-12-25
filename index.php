@@ -86,6 +86,9 @@ try {
                 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     Controllers\ColaboradoresController::delete();
                 }
+            } elseif ($action === 'search-by-name') {
+                $nombre = $_GET['nombre'] ?? null;
+                Controllers\ColaboradoresController::searchByName($nombre);
             } else {
                 http_response_code(404);
                 echo json_encode(['error' => 'Ruta no encontrada', 'ruta' => $path]);
@@ -142,6 +145,14 @@ try {
                     }
                 } elseif ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     Controllers\LegajoController::update();
+                }
+            // En el case 'legajo':
+            } elseif ($action === 'verificar-existencia') {
+                Controllers\LegajoController::verificarExistencia();
+            // En el case 'legajo':
+            } elseif ($action === 'bulk-upload') {
+                if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+                    require_once __DIR__ . '/Views/Legajo/BulkUpload.php';
                 }
             } elseif ($action === 'simple' && $_SERVER['REQUEST_METHOD'] === 'GET') {
                 Controllers\LegajoController::getAllSimple();

@@ -202,4 +202,28 @@ public static function update()
         exit;
     }
     
+    public static function searchByName($nombre)
+    {
+        header('Content-Type: application/json; charset=utf-8');
+
+        if (!$nombre) {
+            http_response_code(400);
+            echo json_encode(['error' => 'Debe proporcionar el nombre']);
+            return;
+        }
+
+        // Buscar colaborador por nombre
+        $colaborador = Colaborador::findByName($nombre);
+
+        if ($colaborador) {
+            http_response_code(200);
+            echo json_encode(['data' => $colaborador]);
+        } else {
+            http_response_code(200);
+            echo json_encode([
+                'data' => [],
+                'message' => 'El colaborador no existe en la base de datos.'
+            ]);
+        }
+    }
 }
