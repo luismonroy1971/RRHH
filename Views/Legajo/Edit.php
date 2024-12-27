@@ -204,7 +204,7 @@ if (!isset($documentoDescripcion)) {
 
             <div class="form-group">
                 <label for="documento_id">Documento</label>
-                <select id="documento_id" disabled>
+                <select id="documento_id" readonly>
                     <option value="<?= htmlspecialchars($legajo['DOCUMENTO_ID']) ?>"><?= htmlspecialchars($documentoDescripcion) ?></option>
                 </select>
                 <input type="hidden" name="documento_id" value="<?= htmlspecialchars($legajo['DOCUMENTO_ID']) ?>">

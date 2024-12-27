@@ -289,6 +289,17 @@ class LegajoController
             }
             $legajoActual = $legajoActual[0];
     
+            // Obtener la descripción del documento
+            $documentoDescripcion = '';
+            try {
+                $docResult = Database::query("SELECT DESCRIPCION FROM documentos WHERE ID = ?", [$_POST['documento_id']]);
+                if (!empty($docResult)) {
+                    $documentoDescripcion = $docResult[0]['DESCRIPCION'];
+                }
+            } catch (Exception $e) {
+                return Response::json(['error' => 'Error al obtener la descripción del documento'], 500);
+            }
+
             $data = [];
             switch ($rolUsuario) {
                 case 'RRHH':
@@ -298,7 +309,7 @@ class LegajoController
                             $legajoActual['APELLIDOS_NOMBRES'] ?? 'Sin_Nombre',
                             $legajoActual['EJERCICIO'],
                             str_pad($legajoActual['PERIODO'], 2, '0', STR_PAD_LEFT),
-                            'Documento_Subido'
+                            $documentoDescripcion
                         );
                         $data['subido_usuario'] = $usuarioActual;
                         $data['subido_hora'] = date('Y-m-d H:i:s');
