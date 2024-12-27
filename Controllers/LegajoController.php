@@ -426,4 +426,17 @@ class LegajoController
             return Response::json(['error' => $e->getMessage()], 500);
         }
     }
+    // In Controllers/LegajoController.php
+
+    public static function listAll() {
+        try {
+            $legajos = Legajo::getAll();
+            header('Content-Type: application/json');
+            echo json_encode(['data' => $legajos]);
+        } catch (Exception $e) {
+            header('Content-Type: application/json');
+            http_response_code(500);
+            echo json_encode(['error' => 'Error al obtener la lista de legajos: ' . $e->getMessage()]);
+        }
+    }
 }

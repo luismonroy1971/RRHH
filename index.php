@@ -127,6 +127,8 @@ try {
                 } elseif ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     Controllers\LegajoController::create();
                 }
+            } elseif ($action === 'list' && $_SERVER['REQUEST_METHOD'] === 'GET') {
+                Controllers\LegajoController::listAll();
             } elseif ($action === 'api' && $_SERVER['REQUEST_METHOD'] === 'GET') {
                 Controllers\LegajoController::getAll();
             } elseif ($action === 'create') {
