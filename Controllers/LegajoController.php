@@ -364,30 +364,38 @@ class LegajoController
     }
     
 
-    public static function delete()
-    {
+    public static function delete() {
         session_start();
         $usuarioActual = $_SESSION['user_id'] ?? null;
-
+    
         if (!$usuarioActual) {
             return Response::json(['error' => 'Usuario no autenticado.'], 403);
         }
-
-        $id = $_POST['id'] ?? null;
-
+    
+        // Obtener el contenido JSON del cuerpo de la petición
+        $json = file_get_contents('php://input');
+        $data = json_decode($json, true);
+        
+        $id = $data['id'] ?? null;
+    
         if (!$id) {
             return Response::json(['error' => 'ID no proporcionado.'], 400);
         }
-
+    
         // Intentar eliminar el registro
-        $result = Legajo::delete($id);
-
-        if ($result) {
-            return Response::json(['message' => 'Legajo eliminado correctamente.']);
-        } else {
-            return Response::json(['error' => 'Error al eliminar el legajo.']);
+        try {
+            $result = Legajo::delete($id);
+            
+            if ($result) {
+                return Response::json(['message' => 'Legajo eliminado correctamente.']);
+            } else {
+                return Response::json(['error' => 'Error al eliminar el legajo.'], 500);
+            }
+        } catch (Exception $e) {
+            return Response::json(['error' => 'Error al eliminar el legajo: ' . $e->getMessage()], 500);
         }
     }
+
     public static function getDocumentos()
     {
         try {

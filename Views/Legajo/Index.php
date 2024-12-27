@@ -571,22 +571,32 @@
 
     // Función para eliminar legajo
     async function deleteLegajo(id) {
-        if (!confirm('¿Está seguro de eliminar este legajo?')) {
-            return;
-        }
+    if (!confirm('¿Está seguro de eliminar este legajo?')) {
+        return;
+    }
 
         try {
-            const response = await fetch('/legajo/delete/' + id, {
-                method: 'DELETE'
+            const response = await fetch('/legajo/delete', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: JSON.stringify({ id: id })
             });
 
             if (response.ok) {
-                // Si estamos en la última página y es el último registro,
-                // retroceder una página
-                if (currentPage > 1 && legajos.length === 1) {
-                    currentPage--;
+                const result = await response.json();
+                if (result.message) {
+                    // Si estamos en la última página y es el último registro,
+                    // retroceder una página
+                    if (currentPage > 1 && legajos.length === 1) {
+                        currentPage--;
+                    }
+                    await loadData();
+                } else {
+                    alert(result.error || 'Error al eliminar el legajo');
                 }
-                await loadData();
             } else {
                 alert('Error al eliminar el legajo');
             }

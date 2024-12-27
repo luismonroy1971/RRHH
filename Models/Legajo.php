@@ -281,9 +281,13 @@ class Legajo
     }
     
 
-    public static function delete($id)
-    {
-        return Database::delete("DELETE FROM legajo WHERE ID = ?", [$id]);
+    public static function delete($id) {
+        try {
+            return Database::delete("DELETE FROM legajo WHERE ID = ?", [$id]);
+        } catch (Exception $e) {
+            error_log("Error al eliminar legajo: " . $e->getMessage());
+            throw $e;
+        }
     }
     // En Legajo.php
     public static function deleteByCombination($tipoDocumento, $nDocumento, $documentoId, $ejercicio, $periodo)
