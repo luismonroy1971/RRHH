@@ -139,10 +139,15 @@ if (!isset($documentoDescripcion)) {
             border: none;
             border-radius: 4px;
             cursor: pointer;
+            margin: 0 5px;
+        }
+
+        .modal-button.confirm {
+            background-color: #059669;
         }
 
         .modal-button:hover {
-            background-color: #b91c1c;
+            opacity: 0.9;
         }
 
         /* Estilos para mensaje de alerta */
@@ -169,6 +174,18 @@ if (!isset($documentoDescripcion)) {
         </div>
     </div>
 
+    <!-- Modal de confirmación para envío de correo -->
+    <div id="emailConfirmModal" class="modal">
+        <div class="modal-content">
+            <h2 style="color: #0f766e; margin-bottom: 1rem;">Confirmación</h2>
+            <p>¿Desea enviar un correo de notificación de esta grabación?</p>
+            <div style="margin-top: 20px;">
+                <button onclick="submitWithEmail(true)" class="modal-button confirm">Sí</button>
+                <button onclick="submitWithEmail(false)" class="modal-button" style="background-color: #6c757d;">No</button>
+            </div>
+        </div>
+    </div>
+
     <div class="top-bar">
         <a href="/legajo">← Retornar Gestión de Legajos</a>
         <div><?= htmlspecialchars($nombreUsuario) ?> | Perfil: <?= htmlspecialchars($rolUsuario) ?></div>
@@ -178,7 +195,7 @@ if (!isset($documentoDescripcion)) {
         <div id="alertMessage" class="alert alert-error"></div>
         
         <h1>Editar Legajo</h1>
-        <form id="legajoForm" onsubmit="return submitForm(event)" enctype="multipart/form-data">
+        <form id="legajoForm" onsubmit="return confirmEmail(event)" enctype="multipart/form-data">
             <input type="hidden" name="id" value="<?= htmlspecialchars($legajo['ID']) ?>">
             
             <!-- Campos comunes (readonly) -->
@@ -200,6 +217,7 @@ if (!isset($documentoDescripcion)) {
             <div class="form-group">
                 <label for="apellidos_nombres">Apellidos y Nombres</label>
                 <input type="text" id="apellidos_nombres" value="<?= htmlspecialchars($legajo['APELLIDOS_NOMBRES']) ?>" readonly>
+                <input type="hidden" name="apellidos_nombres" value="<?= htmlspecialchars($legajo['APELLIDOS_NOMBRES']) ?>">
             </div>
 
             <div class="form-group">
@@ -208,6 +226,7 @@ if (!isset($documentoDescripcion)) {
                     <option value="<?= htmlspecialchars($legajo['DOCUMENTO_ID']) ?>"><?= htmlspecialchars($documentoDescripcion) ?></option>
                 </select>
                 <input type="hidden" name="documento_id" value="<?= htmlspecialchars($legajo['DOCUMENTO_ID']) ?>">
+                <input type="hidden" name="documento_descripcion" value="<?= htmlspecialchars($documentoDescripcion) ?>">
             </div>
 
             <div class="form-group">
@@ -258,15 +277,45 @@ if (!isset($documentoDescripcion)) {
                 </div>
             <?php endif; ?>
 
+            <!-- Campo oculto para indicar si enviar correo -->
+            <input type="hidden" name="enviar_correo" id="enviar_correo" value="0">
+
             <button type="submit" class="button save">Guardar Cambios</button>
             <a href="/legajo" class="cancel-button">Cancelar</a>
         </form>
     </div>
 
     <script>
-    async function submitForm(event) {
-        event.preventDefault();
+    // Función para confirmar envío de correo
+    function confirmEmail(event) {
+        event.preventDefault(); // Detiene el envío del formulario
         
+        // Valida que el formulario esté completo
+        const form = document.getElementById('legajoForm');
+        if (!form.checkValidity()) {
+            form.reportValidity();
+            return false;
+        }
+        
+        // Mostrar modal de confirmación
+        document.getElementById('emailConfirmModal').style.display = 'block';
+        return false;
+    }
+    
+    // Función para manejar la respuesta del usuario sobre el correo
+    function submitWithEmail(sendEmail) {
+        try {
+            document.getElementById('emailConfirmModal').style.display = 'none';
+            document.getElementById('enviar_correo').value = sendEmail ? "1" : "0";
+            // Llamar a submitForm como una función normal, no como una promesa
+            submitForm();
+        } catch (error) {
+            console.error('Error en submitWithEmail:', error);
+            showErrorModal('Error al procesar la solicitud de correo.');
+        }
+    }
+    
+    async function submitForm() {
         const form = document.getElementById('legajoForm');
         const formData = new FormData(form);
 
@@ -275,8 +324,19 @@ if (!isset($documentoDescripcion)) {
                 method: 'POST',
                 body: formData
             });
-
-            const result = await response.json();
+            
+            // Verificar si la respuesta es JSON o no
+            const contentType = response.headers.get('content-type');
+            let result;
+            
+            if (contentType && contentType.includes('application/json')) {
+                result = await response.json();
+            } else {
+                // Si no es JSON, convertir a texto y mostrar error
+                const text = await response.text();
+                console.error('Respuesta no JSON recibida:', text);
+                throw new Error('Respuesta del servidor inesperada');
+            }
             
             if (!response.ok) {
                 showErrorModal(result.error || 'Error al actualizar el legajo');
@@ -292,8 +352,8 @@ if (!isset($documentoDescripcion)) {
 
             return false;
         } catch (error) {
-            console.error('Error:', error);
-            showErrorModal('Error al procesar la solicitud');
+            console.error('Error en submitForm:', error);
+            showErrorModal('Error al procesar la solicitud. Por favor, intente nuevamente.');
             return false;
         }
     }
@@ -308,9 +368,15 @@ if (!isset($documentoDescripcion)) {
     }
 
     window.onclick = function(event) {
-        const modal = document.getElementById('errorModal');
-        if (event.target == modal) {
+        const errorModal = document.getElementById('errorModal');
+        const emailModal = document.getElementById('emailConfirmModal');
+        
+        if (event.target == errorModal) {
             closeErrorModal();
+        }
+        
+        if (event.target == emailModal) {
+            emailModal.style.display = 'none';
         }
     }
     </script>

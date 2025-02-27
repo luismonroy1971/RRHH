@@ -386,7 +386,7 @@
                             <th>Ejercicio</th>
                             <th>Periodo</th>
                             <th>Emitido</th>
-                            <th>Subido</th>
+                            <th>Firmado</th>
                             <th>Físico</th>
                             <th>Acciones</th>
                         </tr>

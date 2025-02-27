@@ -1,0 +1,13 @@
+DESTINATARIOS: lmonroy1971@gmail.com, lmonroy@tema.com.pe
+ASUNTO: Notificación de cambios en Legajo Personal
+CABECERAS:
+From: noreply@tema.com.pe
+Reply-To: noreply@tema.com.pe
+X-Mailer: PHP/8.3.12
+CUERPO:
+Trabajador: JAMANCA SHUAN SUSAN CAROLINA
+DNI: 10198420
+Documento: PARTICIPACIÓN UTILIDADES
+
+Atentamente,
+Aplicación de Evidencias de RRHH

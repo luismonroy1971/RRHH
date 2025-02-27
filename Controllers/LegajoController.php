@@ -5,6 +5,9 @@ namespace Controllers;
 use Models\Legajo;
 use Libs\Response;
 use Libs\Database;
+require_once __DIR__ . '/../Libs/EmailService.php';
+
+use Libs\EmailService; // Colocar el use después del require
 use Exception;
 
 class LegajoController
@@ -139,6 +142,8 @@ class LegajoController
  
     public static function create()
     {
+        header('Content-Type: application/json');
+        
         session_start();
         $usuarioActual = $_SESSION['user_id'] ?? null;
         $rolUsuario = $_SESSION['role'] ?? null;
@@ -194,9 +199,31 @@ class LegajoController
         $result = Legajo::create($data);
         
         if ($result) {
-            return Response::json(['message' => 'Legajo creado correctamente']);
+            try {
+                // Verificar si se debe enviar correo
+                $enviarCorreo = isset($_POST['enviar_correo']) && $_POST['enviar_correo'] === '1';
+                
+                if ($enviarCorreo) {
+                    $legajoData = [
+                        'APELLIDOS_NOMBRES' => $apellidosNombres,
+                        'N_DOCUMENTO' => $data['n_documento']
+                    ];
+                    
+                    try {
+                        EmailService::enviarNotificacionLegajo($rolUsuario, $legajoData, $documentoDescripcion);
+                    } catch (Exception $e) {
+                        error_log("Error al enviar correo: " . $e->getMessage());
+                        // No retornamos error aquí para no interrumpir el flujo principal
+                    }
+                }
+                
+                return Response::json(['success' => true, 'message' => 'Legajo creado correctamente']);
+            } catch (Exception $e) {
+                error_log("Error después de crear: " . $e->getMessage());
+                return Response::json(['success' => true, 'message' => 'Legajo creado correctamente, pero con advertencias']);
+            }
         } else {
-            return Response::json(['error' => 'Error al crear el legajo']);
+            return Response::json(['error' => 'Error al crear el legajo'], 500);
         }
     }
 
@@ -264,6 +291,8 @@ class LegajoController
 
     public static function update()
     {
+        header('Content-Type: application/json');
+        
         session_start();
         $usuarioActual = $_SESSION['user_id'] ?? null;
         $rolUsuario = $_SESSION['role'] ?? null;
@@ -290,14 +319,16 @@ class LegajoController
             $legajoActual = $legajoActual[0];
     
             // Obtener la descripción del documento
-            $documentoDescripcion = '';
-            try {
-                $docResult = Database::query("SELECT DESCRIPCION FROM documentos WHERE ID = ?", [$_POST['documento_id']]);
-                if (!empty($docResult)) {
-                    $documentoDescripcion = $docResult[0]['DESCRIPCION'];
+            $documentoDescripcion = $_POST['documento_descripcion'] ?? '';
+            if (empty($documentoDescripcion)) {
+                try {
+                    $docResult = Database::query("SELECT DESCRIPCION FROM documentos WHERE ID = ?", [$_POST['documento_id']]);
+                    if (!empty($docResult)) {
+                        $documentoDescripcion = $docResult[0]['DESCRIPCION'];
+                    }
+                } catch (Exception $e) {
+                    return Response::json(['error' => 'Error al obtener la descripción del documento'], 500);
                 }
-            } catch (Exception $e) {
-                return Response::json(['error' => 'Error al obtener la descripción del documento'], 500);
             }
 
             $data = [];
@@ -314,6 +345,8 @@ class LegajoController
                         $data['subido_usuario'] = $usuarioActual;
                         $data['subido_hora'] = date('Y-m-d H:i:s');
                         $data['subido_observacion'] = $_POST['subido_observacion'] ?? '';
+                    } elseif (isset($_POST['subido_observacion']) && $_POST['subido_observacion'] !== $legajoActual['SUBIDO_OBSERVACION']) {
+                        $data['subido_observacion'] = $_POST['subido_observacion'];
                     }
                     break;
     
@@ -334,7 +367,30 @@ class LegajoController
             $result = Legajo::update($id, $data);
     
             if ($result) {
-                return Response::json(['success' => true, 'message' => 'Legajo actualizado correctamente']);
+                try {
+                    // Verificar si se debe enviar correo
+                    $enviarCorreo = isset($_POST['enviar_correo']) && $_POST['enviar_correo'] === '1';
+                    
+                    if ($enviarCorreo) {
+                        // Usar los datos actualizados del legajo
+                        $legajoData = [
+                            'APELLIDOS_NOMBRES' => $legajoActual['APELLIDOS_NOMBRES'],
+                            'N_DOCUMENTO' => $legajoActual['N_DOCUMENTO']
+                        ];
+                        
+                        try {
+                            EmailService::enviarNotificacionLegajo($rolUsuario, $legajoData, $documentoDescripcion);
+                        } catch (Exception $e) {
+                            error_log("Error al enviar correo: " . $e->getMessage());
+                            // No retornamos error aquí para no interrumpir el flujo principal
+                        }
+                    }
+                    
+                    return Response::json(['success' => true, 'message' => 'Legajo actualizado correctamente']);
+                } catch (Exception $e) {
+                    error_log("Error después de actualizar: " . $e->getMessage());
+                    return Response::json(['error' => 'El legajo se actualizó pero ocurrió un error adicional'], 500);
+                }
             } else {
                 return Response::json(['error' => 'Error al actualizar el legajo'], 500);
             }

@@ -99,10 +99,15 @@ $rolUsuario = $_SESSION['role'] ?? 'INVITADO';
             border: none;
             border-radius: 4px;
             cursor: pointer;
+            margin: 0 5px;
+        }
+
+        .modal-button.confirm {
+            background-color: #059669;
         }
 
         .modal-button:hover {
-            background-color: #b91c1c;
+            opacity: 0.9;
         }
 
         /* Estilos para mensaje de alerta */
@@ -128,6 +133,19 @@ $rolUsuario = $_SESSION['role'] ?? 'INVITADO';
             <button onclick="closeErrorModal()" class="modal-button">Aceptar</button>
         </div>
     </div>
+
+    <!-- Modal de confirmación para envío de correo -->
+    <div id="emailConfirmModal" class="modal">
+        <div class="modal-content">
+            <h2 style="color: #0f766e; margin-bottom: 1rem;">Confirmación</h2>
+            <p>¿Desea enviar un correo de notificación de esta grabación?</p>
+            <div style="margin-top: 20px;">
+                <button onclick="submitWithEmail(true)" class="modal-button confirm">Sí</button>
+                <button onclick="submitWithEmail(false)" class="modal-button" style="background-color: #6c757d;">No</button>
+            </div>
+        </div>
+    </div>
+    
     <!-- Barra Superior -->
     <div class="top-bar">
         <a href="/legajo">← Retornar Gestión de Legajos</a>
@@ -138,7 +156,7 @@ $rolUsuario = $_SESSION['role'] ?? 'INVITADO';
         <!-- Alerta para mensajes de error -->
         <div id="alertMessage" class="alert alert-error"></div>
         <h1>Agregar Legajo</h1>
-        <form id="legajoForm" onsubmit="return submitForm(event)" enctype="multipart/form-data">
+        <form id="legajoForm" onsubmit="return confirmEmail(event)" enctype="multipart/form-data">
             <div class="form-group">
                 <label for="tipo_documento">Tipo Documento</label>
                 <select name="tipo_documento" id="tipo_documento" required>
@@ -152,7 +170,7 @@ $rolUsuario = $_SESSION['role'] ?? 'INVITADO';
                 <input type="text" name="n_documento" id="n_documento" required>
             </div>
 
-            <button class="add-button type="button" id="buscar_nombre" onclick="buscarNombre()">Buscar Nombre Completo</button>
+            <button class="add-button" type="button" id="buscar_nombre" onclick="buscarNombre()">Buscar Nombre Completo</button>
 
             <div class="form-group">
                 <label for="apellidos_nombres">Apellidos y Nombres</label>
@@ -228,14 +246,44 @@ $rolUsuario = $_SESSION['role'] ?? 'INVITADO';
 
             <button type="submit" class="button save">Guardar</button>
             <a href="/legajo" class="cancel-button">Cancelar</a>
+            
+            <!-- Campo oculto para indicar si enviar correo -->
+            <input type="hidden" name="enviar_correo" id="enviar_correo" value="0">
         </form>
     </div>
 
     <script>
-        // Función para mostrar el modal de error
-        async function submitForm(event) {
-            event.preventDefault(); // Esto es crucial - detiene el envío tradicional del formulario
+        // Función para confirmar envío de correo
+        function confirmEmail(event) {
+            event.preventDefault(); // Detiene el envío del formulario
             
+            // Valida que el formulario esté completo
+            const form = document.getElementById('legajoForm');
+            if (!form.checkValidity()) {
+                form.reportValidity();
+                return false;
+            }
+            
+            // Mostrar modal de confirmación
+            document.getElementById('emailConfirmModal').style.display = 'block';
+            return false;
+        }
+        
+        // Función para manejar la respuesta del usuario sobre el correo
+        function submitWithEmail(sendEmail) {
+            try {
+                document.getElementById('emailConfirmModal').style.display = 'none';
+                document.getElementById('enviar_correo').value = sendEmail ? "1" : "0";
+                // Llamar a submitForm como una función normal, no como una promesa
+                submitForm();
+            } catch (error) {
+                console.error('Error en submitWithEmail:', error);
+                showErrorModal('Error al procesar la solicitud de correo.');
+            }
+        }
+        
+        // Función para enviar el formulario
+        async function submitForm() {
             const form = document.getElementById('legajoForm');
             const formData = new FormData(form);
 
@@ -245,7 +293,18 @@ $rolUsuario = $_SESSION['role'] ?? 'INVITADO';
                     body: formData
                 });
 
-                const result = await response.json();
+                // Verificar si la respuesta es JSON o no
+                const contentType = response.headers.get('content-type');
+                let result;
+                
+                if (contentType && contentType.includes('application/json')) {
+                    result = await response.json();
+                } else {
+                    // Si no es JSON, convertir a texto y mostrar error
+                    const text = await response.text();
+                    console.error('Respuesta no JSON recibida:', text);
+                    throw new Error('Respuesta del servidor inesperada');
+                }
 
                 if (!response.ok) {
                     // Mostrar el modal con el mensaje de error
@@ -257,8 +316,8 @@ $rolUsuario = $_SESSION['role'] ?? 'INVITADO';
                 window.location.href = '/legajo';
                 return false;
             } catch (error) {
-                showErrorModal('Error al procesar la solicitud');
-                console.error(error);
+                showErrorModal('Error al procesar la solicitud. Por favor, intente nuevamente.');
+                console.error('Error en submitForm:', error);
                 return false;
             }
         }
@@ -275,10 +334,15 @@ $rolUsuario = $_SESSION['role'] ?? 'INVITADO';
         // Cerrar el modal si se hace clic fuera de él
         window.onclick = function(event) {
             const modal = document.getElementById('errorModal');
+            const emailModal = document.getElementById('emailConfirmModal');
             if (event.target == modal) {
                 closeErrorModal();
             }
+            if (event.target == emailModal) {
+                emailModal.style.display = 'none';
+            }
         }
+        
         async function buscarNombre() {
             const tipoDocumento = document.getElementById("tipo_documento").value;
             const nDocumento = document.getElementById("n_documento").value;
