@@ -24,27 +24,30 @@ class EmailService
         
         if ($rol === 'RRHH') {
             $destinatarios = [
-                'sdelgado@tema.com.pe',
-                'jrodriguez@tema.com.pe',
-                'sjamanca@tema.com.pe'
-                //'lmonroy1971@gmail.com',
-                //'lmonroy@tema.com.pe'
+                //'sdelgado@tema.com.pe',
+                //'jrodriguez@tema.com.pe',
+                //'sjamanca@tema.com.pe'
+                'lhoyos@tema.com.pe',
+                'bmunoz@tema.com.pe',
+                'lmonroy@tema.com.pe'
             ];
         } elseif ($rol === 'NOMINAS') {
             $destinatarios = [
-                'aqueque@tema.com.pe',
-                'rmunoz@tema.com.pe'
-                //'lmonroy1971@gmail.com',
-                //'lmonroy@tema.com.pe'
+                //'aqueque@tema.com.pe',
+                //'rmunoz@tema.com.pe'
+                'lhoyos@tema.com.pe',
+                'bmunoz@tema.com.pe',
+                'lmonroy@tema.com.pe'
             ];
         } elseif ($rol === 'RECEPCION') {
             // En caso de querer añadir correos para RECEPCION en el futuro
             $destinatarios = [
-                'sdelgado@tema.com.pe',
-                'jrodriguez@tema.com.pe',
-                'sjamanca@tema.com.pe'
-                //'lmonroy1971@gmail.com',
-                //'lmonroy@tema.com.pe'
+                //'sdelgado@tema.com.pe',
+                //'jrodriguez@tema.com.pe',
+                //'sjamanca@tema.com.pe'
+                'lhoyos@tema.com.pe',
+                'bmunoz@tema.com.pe',
+                'lmonroy@tema.com.pe'
             ];
         }
         

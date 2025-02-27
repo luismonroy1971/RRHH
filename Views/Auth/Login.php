@@ -3,143 +3,318 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Inicio de Sesión</title>
+    <title>Tema Litoclean - Gestión de Evidencias RRHH</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        /* Estilos para el formulario de login */
-        body {
-            font-family: Arial, sans-serif;
+        :root {
+            --primary-color: #1e88e5;
+            --primary-dark: #005cb2;
+            --accent-color: #ff9800;
+            --text-color: #333;
+            --light-gray: #f5f5f5;
+            --border-color: #ddd;
+        }
+        
+        * {
             margin: 0;
             padding: 0;
-            background: #f2f2f2;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 100vh;
         }
-
-        .login-container {
-            background: #fff;
-            padding: 2rem;
-            border-radius: 8px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        
+        .login-wrapper {
+            display: flex;
             width: 100%;
-            max-width: 400px;
+            max-width: 900px;
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
         }
-
-        .login-container h2 {
-            margin-bottom: 1rem;
-            font-size: 1.5rem;
-            text-align: center;
-            color: #333;
+        
+        .login-sidebar {
+            flex: 1;
+            background: linear-gradient(to bottom, var(--primary-color), var(--primary-dark));
+            color: white;
+            padding: 40px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            position: relative;
         }
-
+        
+        .login-form {
+            flex: 1;
+            padding: 40px;
+        }
+        
+        .company-logo {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 30px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .company-logo i {
+            margin-right: 10px;
+            font-size: 28px;
+        }
+        
+        .welcome-text {
+            margin-bottom: 20px;
+        }
+        
+        .welcome-text h1 {
+            font-size: 28px;
+            margin-bottom: 15px;
+        }
+        
+        .welcome-text p {
+            opacity: 0.9;
+            line-height: 1.6;
+        }
+        
+        .form-header {
+            margin-bottom: 30px;
+        }
+        
+        .form-header h2 {
+            font-size: 24px;
+            color: var(--text-color);
+            margin-bottom: 10px;
+        }
+        
+        .form-header p {
+            color: #666;
+        }
+        
         .form-group {
-            margin-bottom: 1rem;
-            position: relative; /* Para poder posicionar el ícono sobre el input */
+            margin-bottom: 25px;
+            position: relative;
         }
-
+        
         .form-group label {
             display: block;
-            margin-bottom: 0.5rem;
-            color: #555;
+            margin-bottom: 8px;
+            color: var(--text-color);
+            font-weight: 500;
         }
-
-        .form-group input {
+        
+        .input-with-icon {
+            position: relative;
+        }
+        
+        .input-with-icon i {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #888;
+        }
+        
+        .input-with-icon input {
             width: 100%;
-            padding: 0.8rem;
-            padding-right: 2.5rem; /* Dejar espacio para el ícono */
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            box-sizing: border-box;
+            padding: 12px 15px 12px 45px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-size: 16px;
+            transition: all 0.3s;
         }
-
-        .form-group input:focus {
-            border-color: #007bff;
+        
+        .input-with-icon input:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(30, 136, 229, 0.2);
             outline: none;
         }
-
-        /* Ícono para mostrar/ocultar contraseña */
+        
         .toggle-password {
             position: absolute;
+            right: 15px;
             top: 50%;
-            right: 0.8rem;
             transform: translateY(-50%);
-            width: 20px;
-            height: 20px;
             cursor: pointer;
-            opacity: 0.7;
+            color: #888;
         }
-
-        .toggle-password:hover {
-            opacity: 1;
+        
+        .remember-forgot {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
         }
-
-        .btn {
-            display: inline-block;
+        
+        .remember-me {
+            display: flex;
+            align-items: center;
+        }
+        
+        .remember-me input {
+            margin-right: 8px;
+        }
+        
+        .forgot-password {
+            color: var(--primary-color);
+            text-decoration: none;
+            font-weight: 500;
+        }
+        
+        .forgot-password:hover {
+            text-decoration: underline;
+        }
+        
+        .login-btn {
             width: 100%;
-            padding: 0.8rem;
-            font-size: 1rem;
-            color: #fff;
-            background: #007bff;
+            padding: 12px;
+            background-color: var(--primary-color);
+            color: white;
             border: none;
-            border-radius: 5px;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: 500;
             cursor: pointer;
-            transition: background 0.3s ease;
+            transition: background-color 0.3s;
         }
-
-        .btn:hover {
-            background: #0056b3;
+        
+        .login-btn:hover {
+            background-color: var(--primary-dark);
         }
-
-        .error-message {
-            color: #d9534f;
-            margin-top: 1rem;
+        
+        .login-footer {
+            margin-top: 25px;
             text-align: center;
+            color: #666;
+        }
+        
+        .login-footer a {
+            color: var(--primary-color);
+            text-decoration: none;
+            font-weight: 500;
+        }
+        
+        .login-footer a:hover {
+            text-decoration: underline;
+        }
+        
+        .error-message {
+            background-color: #ffebee;
+            color: #d32f2f;
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 25px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .error-message i {
+            margin-right: 10px;
+        }
+        
+        /* Decoración adicional para el sidebar */
+        .sidebar-decoration {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            opacity: 0.2;
+            font-size: 80px;
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .login-wrapper {
+                flex-direction: column;
+                max-width: 400px;
+            }
+            
+            .login-sidebar {
+                padding: 30px;
+            }
+            
+            .sidebar-decoration {
+                display: none;
+            }
         }
     </style>
 </head>
 <body>
-    <div class="login-container">
-        <h2>Inicio de Sesión</h2>
-        <form method="POST" action="/login">
-            <div class="form-group">
-                <label for="username">Usuario</label>
-                <input type="text" id="username" name="username" placeholder="Ingrese su usuario" required>
+    <div class="login-wrapper">
+        <div class="login-sidebar">
+            <div class="company-logo">
+                <img src="/assets/logo.png" alt="Tema Litoclean" style="max-width: 200px; height: auto;">
             </div>
-            <div class="form-group">
-                <label for="password">Contraseña</label>
-                <input type="password" id="password" name="password" placeholder="Ingrese su contraseña" required>
-                <!-- Ícono para mostrar/ocultar -->
-                <img src="/assets/mostrar.png" alt="Mostrar contraseña" id="togglePassword">
+            <div class="welcome-text">
+                <h1>Bienvenido de nuevo</h1>
+                <p>Sistema de Gestión de Evidencias Documentarias de Recursos Humanos</p>
             </div>
-            <button type="submit" class="btn">Iniciar Sesión</button>
-
+            <div class="sidebar-decoration">
+                <i class="fas fa-folder-open"></i>
+            </div>
+        </div>
+        
+        <div class="login-form">
+            <div class="form-header">
+                <h2>Iniciar Sesión</h2>
+                <p>Ingresa tus credenciales para acceder al sistema</p>
+            </div>
+            
             <?php if (isset($_GET['error'])): ?>
                 <div class="error-message">
+                    <i class="fas fa-exclamation-circle"></i>
                     <?= htmlspecialchars($_GET['error']); ?>
                 </div>
             <?php endif; ?>
-        </form>
+            
+            <form method="POST" action="/login">
+                <div class="form-group">
+                    <label for="username">Usuario</label>
+                    <div class="input-with-icon">
+                        <i class="fas fa-user"></i>
+                        <input type="text" id="username" name="username" placeholder="Ingrese su nombre de usuario" required>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="password">Contraseña</label>
+                    <div class="input-with-icon">
+                        <i class="fas fa-lock"></i>
+                        <input type="password" id="password" name="password" placeholder="Ingrese su contraseña" required>
+                        <i class="toggle-password fas fa-eye" id="togglePassword"></i>
+                    </div>
+                </div>
+                
+                <div class="remember-me" style="margin-bottom: 25px;">
+                    <input type="checkbox" id="remember" name="remember">
+                    <label for="remember">Recordar sesión</label>
+                </div>
+                
+                <button type="submit" class="login-btn">Iniciar Sesión</button>
+            </form>
+            
+            <!-- Footer eliminado según lo solicitado -->
+        </div>
     </div>
 
     <script>
+        // Toggle password visibility
         const togglePassword = document.getElementById('togglePassword');
         const passwordInput = document.getElementById('password');
-
+        
         togglePassword.addEventListener('click', function() {
+            // Toggle type attribute
             const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
             passwordInput.setAttribute('type', type);
             
-        // Aquí puedes cambiar la imagen si quieres, por ejemplo:
-        if (type === 'text') {
-            // Si ahora está en texto (visible), mostramos el ícono de ocultar
-            this.src = '/assets/ocultar.png';
-            this.alt = 'Ocultar contraseña';
-        } else {
-        // Si ahora está en modo password (oculto), mostramos el ícono de mostrar
-            this.src = '/assets/mostrar.png';
-            this.alt = 'Mostrar contraseña';
-        }
+            // Toggle icon
+            this.classList.toggle('fa-eye');
+            this.classList.toggle('fa-eye-slash');
         });
     </script>
 </body>
