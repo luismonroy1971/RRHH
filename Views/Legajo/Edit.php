@@ -251,7 +251,7 @@ if (!isset($documentoDescripcion)) {
 
             <?php if ($rolUsuario === 'RRHH'): ?>
                 <div class="form-group">
-                    <label for="subido">Subir Archivo (Subido)</label>
+                    <label for="subido">Subir Archivo (Subido) - solo formato PDF</label>
                     <input type="file" name="subido" id="subido" accept=".pdf">
                     <?php if (!empty($legajo['SUBIDO'])): ?>
                         <div style="margin-top: 0.5rem;">

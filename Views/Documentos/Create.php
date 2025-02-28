@@ -304,7 +304,7 @@ $_SESSION['csrf_token'] = $csrf_token;
             <!-- Código -->
             <div class="form-group">
                 <label for="codigo" class="required">Código</label>
-                <input type="text" name="codigo" id="codigo" placeholder="Ej: DOC-001" 
+                <input type="text" name="codigo" id="codigo" placeholder="Ej: DOCPRUE" 
                        required pattern="[A-Za-z0-9\-]+" 
                        title="Solo se permiten letras, números y guiones" maxlength="20">
                 <span class="help-text">El código debe ser único para cada documento</span>

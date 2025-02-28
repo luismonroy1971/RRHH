@@ -33,9 +33,9 @@ class LegajoController
         return Response::json(['exists' => $exists]);
     }
 
-    // En LegajoController.php
     public static function validateFileName($fileName) {
-        $pattern = '/^.+ - \d{4} - \d{1,2} - .+ - \d{14}\.pdf$/';
+        // Verifica que el nombre del archivo siga el patrón esperado y tenga extensión PDF
+        $pattern = '/^.+ - \d{4} - \d{1,2} - .+ - \d{14}\.pdf$/i';
         return preg_match($pattern, $fileName);
     }
     public static function getAllSimple()
@@ -147,17 +147,17 @@ class LegajoController
         session_start();
         $usuarioActual = $_SESSION['user_id'] ?? null;
         $rolUsuario = $_SESSION['role'] ?? null;
-
+    
         if (!$usuarioActual || $rolUsuario !== 'NOMINAS') {
             return Response::json(['error' => 'No autorizado para crear legajos'], 403);
         }
-
+    
         // Asegurarnos de capturar apellidos_nombres
         $apellidosNombres = $_POST['apellidos_nombres'] ?? null;
         if (!$apellidosNombres) {
             return Response::json(['error' => 'El nombre del trabajador es requerido'], 400);
         }
-
+    
         // Obtener la descripción del documento
         $documentoDescripcion = '';
         try {
@@ -168,7 +168,7 @@ class LegajoController
         } catch (Exception $e) {
             return Response::json(['error' => 'Error al obtener la descripción del documento'], 500);
         }
-
+    
         $data = [
             'tipo_documento' => $_POST['tipo_documento'] ?? null,
             'n_documento' => $_POST['n_documento'] ?? null,
@@ -177,53 +177,58 @@ class LegajoController
             'periodo' => $_POST['periodo'] ?? null,
             'apellidos_nombres' => $apellidosNombres
         ];
-
+    
         // Validar existencia previa
         if (Legajo::existeCombinacion($data)) {
             return Response::json(['error' => 'Ya existe un legajo con esta combinación de datos'], 400);
         }
-
-        if (isset($_FILES['emitido'])) {
-            $data['emitido'] = self::uploadFile(
-                'emitido', 
-                $apellidosNombres, 
-                $data['ejercicio'], 
-                str_pad($data['periodo'], 2, '0', STR_PAD_LEFT), // Asegurar formato de 2 dígitos
-                $documentoDescripcion
-            );
-            $data['emitido_usuario'] = $usuarioActual;
-            $data['emitido_hora'] = date('Y-m-d H:i:s');
-            $data['emitido_observacion'] = $_POST['emitido_observacion'] ?? '';
-        }
-
-        $result = Legajo::create($data);
-        
-        if ($result) {
-            try {
-                // Verificar si se debe enviar correo
-                $enviarCorreo = isset($_POST['enviar_correo']) && $_POST['enviar_correo'] === '1';
-                
-                if ($enviarCorreo) {
-                    $legajoData = [
-                        'APELLIDOS_NOMBRES' => $apellidosNombres,
-                        'N_DOCUMENTO' => $data['n_documento']
-                    ];
-                    
-                    try {
-                        EmailService::enviarNotificacionLegajo($rolUsuario, $legajoData, $documentoDescripcion);
-                    } catch (Exception $e) {
-                        error_log("Error al enviar correo: " . $e->getMessage());
-                        // No retornamos error aquí para no interrumpir el flujo principal
-                    }
-                }
-                
-                return Response::json(['success' => true, 'message' => 'Legajo creado correctamente']);
-            } catch (Exception $e) {
-                error_log("Error después de crear: " . $e->getMessage());
-                return Response::json(['success' => true, 'message' => 'Legajo creado correctamente, pero con advertencias']);
+    
+        try {
+            if (isset($_FILES['emitido'])) {
+                $data['emitido'] = self::uploadFile(
+                    'emitido', 
+                    $apellidosNombres, 
+                    $data['ejercicio'], 
+                    str_pad($data['periodo'], 2, '0', STR_PAD_LEFT), // Asegurar formato de 2 dígitos
+                    $documentoDescripcion
+                );
+                $data['emitido_usuario'] = $usuarioActual;
+                $data['emitido_hora'] = date('Y-m-d H:i:s');
+                $data['emitido_observacion'] = $_POST['emitido_observacion'] ?? '';
             }
-        } else {
-            return Response::json(['error' => 'Error al crear el legajo'], 500);
+    
+            $result = Legajo::create($data);
+            
+            if ($result) {
+                try {
+                    // Verificar si se debe enviar correo
+                    $enviarCorreo = isset($_POST['enviar_correo']) && $_POST['enviar_correo'] === '1';
+                    
+                    if ($enviarCorreo) {
+                        $legajoData = [
+                            'APELLIDOS_NOMBRES' => $apellidosNombres,
+                            'N_DOCUMENTO' => $data['n_documento']
+                        ];
+                        
+                        try {
+                            EmailService::enviarNotificacionLegajo($rolUsuario, $legajoData, $documentoDescripcion);
+                        } catch (Exception $e) {
+                            error_log("Error al enviar correo: " . $e->getMessage());
+                            // No retornamos error aquí para no interrumpir el flujo principal
+                        }
+                    }
+                    
+                    return Response::json(['success' => true, 'message' => 'Legajo creado correctamente']);
+                } catch (Exception $e) {
+                    error_log("Error después de crear: " . $e->getMessage());
+                    return Response::json(['success' => true, 'message' => 'Legajo creado correctamente, pero con advertencias']);
+                }
+            } else {
+                return Response::json(['error' => 'Error al crear el legajo'], 500);
+            }
+        } catch (Exception $e) {
+            error_log("Error al crear legajo: " . $e->getMessage());
+            return Response::json(['error' => $e->getMessage()], 400);
         }
     }
 
@@ -330,69 +335,73 @@ class LegajoController
                     return Response::json(['error' => 'Error al obtener la descripción del documento'], 500);
                 }
             }
-
+    
             $data = [];
-            switch ($rolUsuario) {
-                case 'RRHH':
-                    if (isset($_FILES['subido']) && $_FILES['subido']['error'] === UPLOAD_ERR_OK) {
-                        $data['subido'] = self::uploadFile(
-                            'subido', 
-                            $legajoActual['APELLIDOS_NOMBRES'] ?? 'Sin_Nombre',
-                            $legajoActual['EJERCICIO'],
-                            str_pad($legajoActual['PERIODO'], 2, '0', STR_PAD_LEFT),
-                            $documentoDescripcion
-                        );
-                        $data['subido_usuario'] = $usuarioActual;
-                        $data['subido_hora'] = date('Y-m-d H:i:s');
-                        $data['subido_observacion'] = $_POST['subido_observacion'] ?? '';
-                    } elseif (isset($_POST['subido_observacion']) && $_POST['subido_observacion'] !== $legajoActual['SUBIDO_OBSERVACION']) {
-                        $data['subido_observacion'] = $_POST['subido_observacion'];
-                    }
-                    break;
-    
-                case 'RECEPCION':
-                    if (isset($_POST['fisico'])) {
-                        $data['fisico'] = $_POST['fisico'] ? 1 : 0;
-                        $data['fisico_usuario'] = $usuarioActual;
-                        $data['fisico_hora'] = date('Y-m-d H:i:s');
-                        $data['fisico_observacion'] = $_POST['fisico_observacion'] ?? '';
-                    }
-                    break;
-            }
-    
-            if (empty($data)) {
-                return Response::json(['error' => 'No hay datos para actualizar'], 400);
-            }
-    
-            $result = Legajo::update($id, $data);
-    
-            if ($result) {
-                try {
-                    // Verificar si se debe enviar correo
-                    $enviarCorreo = isset($_POST['enviar_correo']) && $_POST['enviar_correo'] === '1';
-                    
-                    if ($enviarCorreo) {
-                        // Usar los datos actualizados del legajo
-                        $legajoData = [
-                            'APELLIDOS_NOMBRES' => $legajoActual['APELLIDOS_NOMBRES'],
-                            'N_DOCUMENTO' => $legajoActual['N_DOCUMENTO']
-                        ];
-                        
-                        try {
-                            EmailService::enviarNotificacionLegajo($rolUsuario, $legajoData, $documentoDescripcion);
-                        } catch (Exception $e) {
-                            error_log("Error al enviar correo: " . $e->getMessage());
-                            // No retornamos error aquí para no interrumpir el flujo principal
+            try {
+                switch ($rolUsuario) {
+                    case 'RRHH':
+                        if (isset($_FILES['subido']) && $_FILES['subido']['error'] === UPLOAD_ERR_OK) {
+                            $data['subido'] = self::uploadFile(
+                                'subido', 
+                                $legajoActual['APELLIDOS_NOMBRES'] ?? 'Sin_Nombre',
+                                $legajoActual['EJERCICIO'],
+                                str_pad($legajoActual['PERIODO'], 2, '0', STR_PAD_LEFT),
+                                $documentoDescripcion
+                            );
+                            $data['subido_usuario'] = $usuarioActual;
+                            $data['subido_hora'] = date('Y-m-d H:i:s');
+                            $data['subido_observacion'] = $_POST['subido_observacion'] ?? '';
+                        } elseif (isset($_POST['subido_observacion']) && $_POST['subido_observacion'] !== $legajoActual['SUBIDO_OBSERVACION']) {
+                            $data['subido_observacion'] = $_POST['subido_observacion'];
                         }
-                    }
-                    
-                    return Response::json(['success' => true, 'message' => 'Legajo actualizado correctamente']);
-                } catch (Exception $e) {
-                    error_log("Error después de actualizar: " . $e->getMessage());
-                    return Response::json(['error' => 'El legajo se actualizó pero ocurrió un error adicional'], 500);
+                        break;
+    
+                    case 'RECEPCION':
+                        if (isset($_POST['fisico'])) {
+                            $data['fisico'] = $_POST['fisico'] ? 1 : 0;
+                            $data['fisico_usuario'] = $usuarioActual;
+                            $data['fisico_hora'] = date('Y-m-d H:i:s');
+                            $data['fisico_observacion'] = $_POST['fisico_observacion'] ?? '';
+                        }
+                        break;
                 }
-            } else {
-                return Response::json(['error' => 'Error al actualizar el legajo'], 500);
+    
+                if (empty($data)) {
+                    return Response::json(['error' => 'No hay datos para actualizar'], 400);
+                }
+    
+                $result = Legajo::update($id, $data);
+    
+                if ($result) {
+                    try {
+                        // Verificar si se debe enviar correo
+                        $enviarCorreo = isset($_POST['enviar_correo']) && $_POST['enviar_correo'] === '1';
+                        
+                        if ($enviarCorreo) {
+                            // Usar los datos actualizados del legajo
+                            $legajoData = [
+                                'APELLIDOS_NOMBRES' => $legajoActual['APELLIDOS_NOMBRES'],
+                                'N_DOCUMENTO' => $legajoActual['N_DOCUMENTO']
+                            ];
+                            
+                            try {
+                                EmailService::enviarNotificacionLegajo($rolUsuario, $legajoData, $documentoDescripcion);
+                            } catch (Exception $e) {
+                                error_log("Error al enviar correo: " . $e->getMessage());
+                                // No retornamos error aquí para no interrumpir el flujo principal
+                            }
+                        }
+                        
+                        return Response::json(['success' => true, 'message' => 'Legajo actualizado correctamente']);
+                    } catch (Exception $e) {
+                        error_log("Error después de actualizar: " . $e->getMessage());
+                        return Response::json(['error' => 'El legajo se actualizó pero ocurrió un error adicional'], 500);
+                    }
+                } else {
+                    return Response::json(['error' => 'Error al actualizar el legajo'], 500);
+                }
+            } catch (Exception $e) {
+                return Response::json(['error' => $e->getMessage()], 400);
             }
         } catch (Exception $e) {
             error_log("Error en update: " . $e->getMessage());
@@ -404,10 +413,21 @@ class LegajoController
     {
         $file = $_FILES[$inputName];
         $fechaHora = date("YmdHis"); // Fecha y hora en el formato solicitado
-        $fileExtension = pathinfo($file["name"], PATHINFO_EXTENSION);
+        $fileExtension = strtolower(pathinfo($file["name"], PATHINFO_EXTENSION));
+        
+        // Verificar que la extensión sea PDF
+        if ($fileExtension !== 'pdf') {
+            throw new Exception("Solo se permiten archivos PDF");
+        }
+        
+        // Verificar el tipo MIME del archivo
+        $fileMimeType = mime_content_type($file["tmp_name"]);
+        if ($fileMimeType !== 'application/pdf') {
+            throw new Exception("El archivo debe ser un PDF válido");
+        }
     
         // Crear nombre del archivo con el formato deseado
-        $fileName = "{$apellidos_nombres} - {$ejercicio} - {$periodo} - {$documento} - {$fechaHora}.{$fileExtension}";
+        $fileName = "{$apellidos_nombres} - {$ejercicio} - {$periodo} - {$documento} - {$fechaHora}.pdf";
     
         $targetDir = __DIR__ . "/../Uploads/";
         $targetFile = $targetDir . $fileName;
@@ -416,7 +436,8 @@ class LegajoController
         if (move_uploaded_file($file["tmp_name"], $targetFile)) {
             return "/Uploads/" . $fileName; // Retorna la ruta del archivo subido
         }
-        return null; // Si hay un error en la subida
+        
+        throw new Exception("Error al subir el archivo");
     }
     
 

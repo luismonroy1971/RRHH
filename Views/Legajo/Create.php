@@ -214,7 +214,7 @@ $rolUsuario = $_SESSION['role'] ?? 'INVITADO';
             <!-- Campos específicos por perfil -->
             <?php if ($rolUsuario === 'NOMINAS'): ?>
                 <div class="form-group">
-                    <label for="emitido">Subir Archivo (Emitido)</label>
+                    <label for="emitido">Subir Archivo (Emitido) - solo formato PDF</label>
                     <input type="file" name="emitido" id="emitido" accept=".pdf">
                 </div>
                 <div class="form-group">
@@ -223,7 +223,7 @@ $rolUsuario = $_SESSION['role'] ?? 'INVITADO';
                 </div>
             <?php elseif ($rolUsuario === 'RRHH'): ?>
                 <div class="form-group">
-                    <label for="subido">Subir Archivo (Subido)</label>
+                    <label for="subido">Subir Archivo (Subido) - solo formato PDF</label>
                     <input type="file" name="subido" id="subido" accept=".pdf">
                 </div>
                 <div class="form-group">

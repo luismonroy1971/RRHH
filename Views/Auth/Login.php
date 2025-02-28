@@ -296,9 +296,17 @@
                 </div>
                 
                 <button type="submit" class="login-btn">Iniciar Sesión</button>
+
+                <div class="text-center" style="margin-top: 25px;">
+                    <p class="text-xs text-gray-500">
+                        © 2025 Sistema de Gestión. Todos los derechos reservados.
+                    </p>
+                </div>
             </form>
             
             <!-- Footer eliminado según lo solicitado -->
+             <!-- Pie de página del formulario -->
+           
         </div>
     </div>
 
