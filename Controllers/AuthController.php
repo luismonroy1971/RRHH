@@ -6,6 +6,27 @@ use Libs\Response;
 
 class AuthController
 {
+    /**
+     * Muestra el formulario de login
+     */
+    public static function showLoginForm()
+    {
+        // Verificar si el usuario ya está autenticado
+        if (session_status() == PHP_SESSION_NONE) {
+            session_start();
+        }
+        
+        if (isset($_SESSION['user_id'])) {
+            header('Location: /');
+            exit;
+        }
+        
+        require_once __DIR__ . '/../Views/Auth/Login.php';
+    }
+
+    /**
+     * Procesa el login de usuarios
+     */
     public static function login()
     {
         // Activar reporte de errores para debugging
@@ -13,33 +34,52 @@ class AuthController
         ini_set('display_errors', 1);
 
         try {
-            if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-                $username = $_POST['username'] ?? null;
-                $password = $_POST['password'] ?? null;
-        
-                if (!$username || !$password) {
-                    header('Location: /login?error=Usuario y contraseña son requeridos');
-                    exit;
-                }
-        
-                $user = Usuario::findByUsername($username);
-                    
-                if (!$user || !password_verify($password, $user['CONTRASENA'])) {
-                    header('Location: /login?error=Usuario o contraseña incorrectos');
-                    exit;
-                }
+            if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+                header('Location: /login');
+                exit;
+            }
             
-                session_start();
-                $_SESSION['user_id'] = $user['ID'];
-                $_SESSION['username'] = $user['NOMBRE_USUARIO'];
-                $_SESSION['role'] = $user['ROL'];
-            
-                header('Location: /');
+            $username = $_POST['username'] ?? null;
+            $password = $_POST['password'] ?? null;
+    
+            if (!$username || !$password) {
+                header('Location: /login?error=Usuario y contraseña son requeridos');
+                exit;
+            }
+    
+            $user = Usuario::findByUsername($username);
+                
+            if (!$user || !password_verify($password, $user['CONTRASENA'])) {
+                header('Location: /login?error=Usuario o contraseña incorrectos');
                 exit;
             }
         
-            // Si es GET, mostrar la vista de login
-            require __DIR__ . '/Views/Auth/Login.php';
+            // Iniciar sesión
+            if (session_status() == PHP_SESSION_NONE) {
+                session_start();
+            }
+            
+            $_SESSION['user_id'] = $user['ID'];
+            $_SESSION['username'] = $user['NOMBRE_USUARIO'];
+            $_SESSION['role'] = $user['ROL'];
+            
+            // Manejar "Recordar sesión" si está marcado
+            if (isset($_POST['remember']) && $_POST['remember'] == 'on') {
+                // Configurar cookies para recordar al usuario por 30 días
+                $params = session_get_cookie_params();
+                setcookie(
+                    session_name(),
+                    session_id(),
+                    time() + 60*60*24*30, // 30 días
+                    $params["path"],
+                    $params["domain"],
+                    $params["secure"],
+                    $params["httponly"]
+                );
+            }
+        
+            header('Location: /');
+            exit;
             
         } catch (\Exception $e) {
             error_log("Error en login: " . $e->getMessage());
@@ -48,10 +88,16 @@ class AuthController
         }
     }
 
+    /**
+     * Cierra la sesión del usuario
+     */
     public static function logout()
     {
         try {
-            session_start();
+            if (session_status() == PHP_SESSION_NONE) {
+                session_start();
+            }
+            
             session_unset();
             session_destroy();
             
@@ -72,10 +118,16 @@ class AuthController
         }
     }
 
+    /**
+     * Verifica si el usuario está autenticado para uso en API
+     */
     public static function isAuthenticated()
     {
         try {
-            session_start();
+            if (session_status() == PHP_SESSION_NONE) {
+                session_start();
+            }
+            
             if (isset($_SESSION['user_id'])) {
                 return Response::json([
                     'authenticated' => true,

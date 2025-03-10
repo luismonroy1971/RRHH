@@ -38,9 +38,14 @@ class LegajoController
         $pattern = '/^.+ - \d{4} - \d{1,2} - .+ - \d{14}\.pdf$/i';
         return preg_match($pattern, $fileName);
     }
+    
     public static function getAllSimple()
     {
-        session_start();
+        // Verificar si la sesión ya está iniciada
+        if (session_status() == PHP_SESSION_NONE) {
+            session_start();
+        }
+        
         $usuarioActual = $_SESSION['user_id'] ?? null;
     
         if (!$usuarioActual) {
@@ -70,7 +75,11 @@ class LegajoController
 
     public static function getAll()
     {
-        session_start();
+        // Verificar si la sesión ya está iniciada
+        if (session_status() == PHP_SESSION_NONE) {
+            session_start();
+        }
+        
         $usuarioActual = $_SESSION['user_id'] ?? null;
     
         if (!$usuarioActual) {
@@ -144,7 +153,11 @@ class LegajoController
     {
         header('Content-Type: application/json');
         
-        session_start();
+        // Verificar si la sesión ya está iniciada
+        if (session_status() == PHP_SESSION_NONE) {
+            session_start();
+        }
+        
         $usuarioActual = $_SESSION['user_id'] ?? null;
         $rolUsuario = $_SESSION['role'] ?? null;
     
@@ -234,7 +247,11 @@ class LegajoController
 
     public static function edit($id)
     {
-        session_start();
+        // Verificar si la sesión ya está iniciada
+        if (session_status() == PHP_SESSION_NONE) {
+            session_start();
+        }
+        
         $usuarioActual = $_SESSION['user_id'] ?? null;
         $rolUsuario = $_SESSION['role'] ?? null;
     
@@ -298,7 +315,11 @@ class LegajoController
     {
         header('Content-Type: application/json');
         
-        session_start();
+        // Verificar si la sesión ya está iniciada
+        if (session_status() == PHP_SESSION_NONE) {
+            session_start();
+        }
+        
         $usuarioActual = $_SESSION['user_id'] ?? null;
         $rolUsuario = $_SESSION['role'] ?? null;
     
@@ -442,7 +463,11 @@ class LegajoController
     
 
     public static function delete() {
-        session_start();
+        // Verificar si la sesión ya está iniciada
+        if (session_status() == PHP_SESSION_NONE) {
+            session_start();
+        }
+        
         $usuarioActual = $_SESSION['user_id'] ?? null;
     
         if (!$usuarioActual) {

@@ -1,3 +1,6 @@
+<?php
+// Este archivo va en /Views/Auth/Login.php
+?>
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -218,6 +221,20 @@
             margin-right: 10px;
         }
         
+        .success-message {
+            background-color: #e8f5e9;
+            color: #2e7d32;
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 25px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .success-message i {
+            margin-right: 10px;
+        }
+        
         /* Decoración adicional para el sidebar */
         .sidebar-decoration {
             position: absolute;
@@ -269,6 +286,13 @@
                 <div class="error-message">
                     <i class="fas fa-exclamation-circle"></i>
                     <?= htmlspecialchars($_GET['error']); ?>
+                </div>
+            <?php endif; ?>
+            
+            <?php if (isset($_GET['message'])): ?>
+                <div class="success-message">
+                    <i class="fas fa-check-circle"></i>
+                    <?= htmlspecialchars($_GET['message']); ?>
                 </div>
             <?php endif; ?>
             

@@ -13,18 +13,30 @@ class Usuario
 
     public static function create($data)
     {
+        // Si la contraseña ya está hasheada (por ejemplo, cuando no se cambia), no la hasheamos de nuevo
+        $password = $data['contrasena'];
+        if (strpos($password, '$2y$') !== 0) { // No es un hash de bcrypt
+            $password = password_hash($password, PASSWORD_BCRYPT);
+        }
+
         return Database::insert("INSERT INTO usuarios (NOMBRE_USUARIO, CONTRASENA, ROL) VALUES (?, ?, ?)", [
             $data['nombre_usuario'],
-            password_hash($data['contrasena'], PASSWORD_BCRYPT),
+            $password,
             $data['rol']
         ]);
     }
 
     public static function update($id, $data)
     {
+        // Si la contraseña ya está hasheada (por ejemplo, cuando no se cambia), no la hasheamos de nuevo
+        $password = $data['contrasena'];
+        if (strpos($password, '$2y$') !== 0) { // No es un hash de bcrypt
+            $password = password_hash($password, PASSWORD_BCRYPT);
+        }
+
         return Database::update("UPDATE usuarios SET NOMBRE_USUARIO = ?, CONTRASENA = ?, ROL = ? WHERE ID = ?", [
             $data['nombre_usuario'],
-            password_hash($data['contrasena'], PASSWORD_BCRYPT),
+            $password,
             $data['rol'],
             $id
         ]);
@@ -43,9 +55,8 @@ class Usuario
     }
 
     public static function getById($id)
-{
-    $result = Database::query("SELECT * FROM usuarios WHERE ID = ?", [$id]);
-    return $result ? $result[0] : null;
-}
-
+    {
+        $result = Database::query("SELECT * FROM usuarios WHERE ID = ?", [$id]);
+        return $result ? $result[0] : null;
+    }
 }

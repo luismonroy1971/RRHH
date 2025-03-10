@@ -296,7 +296,7 @@ $rolUsuario = $_SESSION['role'] ?? 'INVITADO';
         </div>
         <?php endif; ?>
         
-        <form action="/usuarios/update/<?= htmlspecialchars($usuario['ID']) ?>" method="POST">
+        <form action="/usuarios/update" method="POST">
             <input type="hidden" name="id" value="<?= htmlspecialchars($usuario['ID']) ?>">
 
             <!-- Nombre de Usuario -->

@@ -30,8 +30,12 @@ class UsuariosController {
         }
     }
 
-    public static function update() {
-        $id = $_POST['id'] ?? null;
+    public static function update($id = null) {
+        // Si no se proporciona ID como parámetro en la URL, intentar obtenerlo del POST
+        if ($id === null) {
+            $id = $_POST['id'] ?? null;
+        }
+
         if (!$id) {
             header('Location: /usuarios?message=ID no proporcionado');
             exit;
@@ -42,6 +46,18 @@ class UsuariosController {
             'contrasena' => $_POST['contrasena'] ?? null,
             'rol' => $_POST['rol'] ?? null
         ];
+
+        // Si la contraseña está vacía, no actualizarla
+        if (empty($data['contrasena'])) {
+            // Obtener el usuario actual
+            $currentUser = Usuario::getById($id);
+            if ($currentUser) {
+                $data['contrasena'] = $currentUser['CONTRASENA'];
+            } else {
+                header('Location: /usuarios?message=Error al obtener el usuario');
+                exit;
+            }
+        }
 
         $result = Usuario::update($id, $data);
 
@@ -73,6 +89,11 @@ class UsuariosController {
     }
 
     public static function showEditForm($id) {
+        if (!$id) {
+            header('Location: /usuarios?message=ID no proporcionado');
+            exit;
+        }
+
         $usuario = Usuario::getById($id);
         if (!$usuario) {
             header('Location: /usuarios?message=Usuario no encontrado');

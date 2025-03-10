@@ -6,15 +6,15 @@ class DashboardController
 {
     public static function index()
     {
-        session_start();
+        // La verificación de autenticación ya se realiza en el router
+        // No es necesario iniciar la sesión nuevamente aquí
+        
+        // Obtener datos del usuario para la vista (si es necesario)
+        $user_id = $_SESSION['user_id'] ?? null;
+        $username = $_SESSION['username'] ?? null;
+        $role = $_SESSION['role'] ?? null;
 
-        // Verificar si el usuario está autenticado
-        if (!isset($_SESSION['user_id'])) {
-            header('Location: /login');
-            exit;
-        }
-
-        // Si está autenticado, mostrar la vista del dashboard
+        // Mostrar la vista del dashboard
         require __DIR__ . '/../Views/Dashboard/index.php';
     }
 }
