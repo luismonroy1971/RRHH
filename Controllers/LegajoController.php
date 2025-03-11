@@ -151,73 +151,120 @@ class LegajoController
  
     public static function create()
     {
-        header('Content-Type: application/json');
+        error_log("=== Inicio de método create() en LegajoController ===");
         
-        // Verificar si la sesión ya está iniciada
-        if (session_status() == PHP_SESSION_NONE) {
-            session_start();
+        // Establecer encabezado JSON
+        if (!headers_sent()) {
+            header('Content-Type: application/json; charset=utf-8');
         }
         
-        $usuarioActual = $_SESSION['user_id'] ?? null;
-        $rolUsuario = $_SESSION['role'] ?? null;
-    
-        if (!$usuarioActual || $rolUsuario !== 'NOMINAS') {
-            return Response::json(['error' => 'No autorizado para crear legajos'], 403);
-        }
-    
-        // Asegurarnos de capturar apellidos_nombres
-        $apellidosNombres = $_POST['apellidos_nombres'] ?? null;
-        if (!$apellidosNombres) {
-            return Response::json(['error' => 'El nombre del trabajador es requerido'], 400);
-        }
-    
-        // Obtener la descripción del documento
-        $documentoDescripcion = '';
         try {
-            $docResult = Database::query("SELECT DESCRIPCION FROM documentos WHERE ID = ?", [$_POST['documento_id']]);
-            if (!empty($docResult)) {
-                $documentoDescripcion = $docResult[0]['DESCRIPCION'];
+            // Verificar si la sesión ya está iniciada
+            if (session_status() == PHP_SESSION_NONE) {
+                session_start();
             }
-        } catch (Exception $e) {
-            return Response::json(['error' => 'Error al obtener la descripción del documento'], 500);
-        }
-    
-        $data = [
-            'tipo_documento' => $_POST['tipo_documento'] ?? null,
-            'n_documento' => $_POST['n_documento'] ?? null,
-            'documento_id' => $_POST['documento_id'] ?? null,
-            'ejercicio' => $_POST['ejercicio'] ?? null,
-            'periodo' => $_POST['periodo'] ?? null,
-            'apellidos_nombres' => $apellidosNombres
-        ];
-    
-        // Validar existencia previa
-        if (Legajo::existeCombinacion($data)) {
-            return Response::json(['error' => 'Ya existe un legajo con esta combinación de datos'], 400);
-        }
-    
-        try {
-            if (isset($_FILES['emitido'])) {
-                $data['emitido'] = self::uploadFile(
-                    'emitido', 
-                    $apellidosNombres, 
-                    $data['ejercicio'], 
-                    str_pad($data['periodo'], 2, '0', STR_PAD_LEFT), // Asegurar formato de 2 dígitos
-                    $documentoDescripcion
-                );
-                $data['emitido_usuario'] = $usuarioActual;
-                $data['emitido_hora'] = date('Y-m-d H:i:s');
-                $data['emitido_observacion'] = $_POST['emitido_observacion'] ?? '';
-            }
-    
-            $result = Legajo::create($data);
             
-            if ($result) {
-                try {
+            $usuarioActual = $_SESSION['user_id'] ?? null;
+            $rolUsuario = $_SESSION['role'] ?? null;
+            
+            error_log("Usuario: " . $usuarioActual . ", Rol: " . $rolUsuario);
+        
+            if (!$usuarioActual) {
+                error_log("Error: Usuario no autenticado");
+                return Response::json(['error' => 'No autorizado. Usuario no autenticado.'], 403);
+            }
+            
+            if ($rolUsuario !== 'NOMINAS') {
+                error_log("Error: Usuario no tiene rol NOMINAS, tiene rol " . $rolUsuario);
+                return Response::json(['error' => 'No autorizado para crear legajos. Se requiere rol NOMINAS.'], 403);
+            }
+        
+            // Registrar datos POST recibidos
+            error_log("Datos POST recibidos: " . print_r($_POST, true));
+            error_log("Archivos recibidos: " . print_r($_FILES, true));
+            
+            // Asegurarnos de capturar apellidos_nombres
+            $apellidosNombres = $_POST['apellidos_nombres'] ?? null;
+            if (!$apellidosNombres) {
+                error_log("Error: Nombre del trabajador no proporcionado");
+                return Response::json(['error' => 'El nombre del trabajador es requerido'], 400);
+            }
+        
+            // Obtener la descripción del documento
+            $documentoDescripcion = '';
+            try {
+                $docResult = Database::query("SELECT DESCRIPCION FROM documentos WHERE ID = ?", [$_POST['documento_id']]);
+                if (!empty($docResult)) {
+                    $documentoDescripcion = $docResult[0]['DESCRIPCION'];
+                    error_log("Descripción del documento obtenida: " . $documentoDescripcion);
+                } else {
+                    error_log("Advertencia: No se encontró descripción para el documento ID: " . $_POST['documento_id']);
+                }
+            } catch (Exception $e) {
+                error_log("Error al obtener la descripción del documento: " . $e->getMessage());
+                return Response::json(['error' => 'Error al obtener la descripción del documento: ' . $e->getMessage()], 500);
+            }
+        
+            $data = [
+                'tipo_documento' => $_POST['tipo_documento'] ?? null,
+                'n_documento' => $_POST['n_documento'] ?? null,
+                'documento_id' => $_POST['documento_id'] ?? null,
+                'ejercicio' => $_POST['ejercicio'] ?? null,
+                'periodo' => $_POST['periodo'] ?? null,
+                'apellidos_nombres' => $apellidosNombres
+            ];
+            
+            error_log("Datos para validación de existencia: " . print_r($data, true));
+        
+            // Validar existencia previa
+            if (Legajo::existeCombinacion($data)) {
+                error_log("Error: Ya existe un legajo con esta combinación de datos");
+                return Response::json(['error' => 'Ya existe un legajo con esta combinación de datos'], 400);
+            }
+        
+            try {
+                // Procesar archivo si fue subido
+                if (isset($_FILES['emitido']) && $_FILES['emitido']['error'] === UPLOAD_ERR_OK) {
+                    error_log("Procesando archivo emitido...");
+                    
+                    // Verificar directorio de uploads
+                    $uploadDir = __DIR__ . "/../Uploads/";
+                    if (!is_dir($uploadDir)) {
+                        error_log("Error: El directorio de uploads no existe: " . $uploadDir);
+                        mkdir($uploadDir, 0755, true);
+                        error_log("Directorio de uploads creado");
+                    }
+                    
+                    if (!is_writable($uploadDir)) {
+                        error_log("Error: El directorio de uploads no tiene permisos de escritura: " . $uploadDir);
+                        return Response::json(['error' => 'Error de configuración del servidor: el directorio de uploads no tiene permisos de escritura'], 500);
+                    }
+                    
+                    $data['emitido'] = self::uploadFile(
+                        'emitido', 
+                        $apellidosNombres, 
+                        $data['ejercicio'], 
+                        str_pad($data['periodo'], 2, '0', STR_PAD_LEFT),
+                        $documentoDescripcion
+                    );
+                    $data['emitido_usuario'] = $usuarioActual;
+                    $data['emitido_hora'] = date('Y-m-d H:i:s');
+                    $data['emitido_observacion'] = $_POST['emitido_observacion'] ?? '';
+                    
+                    error_log("Archivo procesado correctamente. Ruta: " . $data['emitido']);
+                }
+        
+                error_log("Intentando crear legajo en la base de datos");
+                $result = Legajo::create($data);
+                
+                if ($result) {
+                    error_log("Legajo creado correctamente. ID: " . $result);
+                    
                     // Verificar si se debe enviar correo
                     $enviarCorreo = isset($_POST['enviar_correo']) && $_POST['enviar_correo'] === '1';
                     
                     if ($enviarCorreo) {
+                        error_log("Enviando notificación por correo...");
                         $legajoData = [
                             'APELLIDOS_NOMBRES' => $apellidosNombres,
                             'N_DOCUMENTO' => $data['n_documento']
@@ -225,23 +272,28 @@ class LegajoController
                         
                         try {
                             EmailService::enviarNotificacionLegajo($rolUsuario, $legajoData, $documentoDescripcion);
+                            error_log("Correo enviado correctamente");
                         } catch (Exception $e) {
                             error_log("Error al enviar correo: " . $e->getMessage());
-                            // No retornamos error aquí para no interrumpir el flujo principal
+                            // No interrumpir el flujo principal por error de correo
                         }
                     }
                     
+                    error_log("Proceso completado. Devolviendo respuesta de éxito");
                     return Response::json(['success' => true, 'message' => 'Legajo creado correctamente']);
-                } catch (Exception $e) {
-                    error_log("Error después de crear: " . $e->getMessage());
-                    return Response::json(['success' => true, 'message' => 'Legajo creado correctamente, pero con advertencias']);
+                } else {
+                    error_log("Error: No se pudo crear el legajo en la base de datos");
+                    return Response::json(['error' => 'Error al crear el legajo en la base de datos'], 500);
                 }
-            } else {
-                return Response::json(['error' => 'Error al crear el legajo'], 500);
+            } catch (Exception $e) {
+                error_log("Excepción capturada: " . $e->getMessage());
+                error_log("Stack trace: " . $e->getTraceAsString());
+                return Response::json(['error' => $e->getMessage()], 400);
             }
         } catch (Exception $e) {
-            error_log("Error al crear legajo: " . $e->getMessage());
-            return Response::json(['error' => $e->getMessage()], 400);
+            error_log("Excepción no controlada: " . $e->getMessage());
+            error_log("Stack trace: " . $e->getTraceAsString());
+            return Response::json(['error' => 'Error inesperado: ' . $e->getMessage()], 500);
         }
     }
 
@@ -322,6 +374,10 @@ class LegajoController
         
         $usuarioActual = $_SESSION['user_id'] ?? null;
         $rolUsuario = $_SESSION['role'] ?? null;
+        
+        // Registrar información de depuración
+        error_log("Iniciando update de legajo. Usuario: $usuarioActual, Rol: $rolUsuario");
+        error_log("Datos POST recibidos: " . print_r($_POST, true));
     
         if (!$usuarioActual) {
             return Response::json(['error' => 'Usuario no autenticado'], 401);
@@ -378,11 +434,21 @@ class LegajoController
                         break;
     
                     case 'RECEPCION':
+                        // Verificar si se envió el campo fisico (podría ser 0 o 1)
                         if (isset($_POST['fisico'])) {
-                            $data['fisico'] = $_POST['fisico'] ? 1 : 0;
+                            // Convertir a entero para asegurar un valor limpio
+                            $fisico = intval($_POST['fisico']);
+                            $data['fisico'] = $fisico;
                             $data['fisico_usuario'] = $usuarioActual;
                             $data['fisico_hora'] = date('Y-m-d H:i:s');
-                            $data['fisico_observacion'] = $_POST['fisico_observacion'] ?? '';
+                            
+                            // Actualizar observación si está establecida
+                            if (isset($_POST['fisico_observacion'])) {
+                                $data['fisico_observacion'] = $_POST['fisico_observacion'];
+                            }
+                            
+                            // Registrar datos para depuración
+                            error_log("Datos de fisico para actualizar: " . print_r($data, true));
                         }
                         break;
                 }
@@ -394,34 +460,36 @@ class LegajoController
                 $result = Legajo::update($id, $data);
     
                 if ($result) {
-                    try {
-                        // Verificar si se debe enviar correo
-                        $enviarCorreo = isset($_POST['enviar_correo']) && $_POST['enviar_correo'] === '1';
+                    // Verificar si se debe enviar correo
+                    $enviarCorreo = isset($_POST['enviar_correo']) && $_POST['enviar_correo'] === '1';
+                    
+                    error_log("¿Enviar correo? " . ($enviarCorreo ? "SÍ" : "NO"));
+                    
+                    if ($enviarCorreo) {
+                        // Usar los datos actualizados del legajo
+                        $legajoData = [
+                            'APELLIDOS_NOMBRES' => $legajoActual['APELLIDOS_NOMBRES'],
+                            'N_DOCUMENTO' => $legajoActual['N_DOCUMENTO']
+                        ];
                         
-                        if ($enviarCorreo) {
-                            // Usar los datos actualizados del legajo
-                            $legajoData = [
-                                'APELLIDOS_NOMBRES' => $legajoActual['APELLIDOS_NOMBRES'],
-                                'N_DOCUMENTO' => $legajoActual['N_DOCUMENTO']
-                            ];
-                            
-                            try {
-                                EmailService::enviarNotificacionLegajo($rolUsuario, $legajoData, $documentoDescripcion);
-                            } catch (Exception $e) {
-                                error_log("Error al enviar correo: " . $e->getMessage());
-                                // No retornamos error aquí para no interrumpir el flujo principal
-                            }
+                        error_log("Intentando enviar correo para legajo: " . print_r($legajoData, true));
+                        
+                        try {
+                            // Llamar al servicio de correo
+                            $emailResult = EmailService::enviarNotificacionLegajo($rolUsuario, $legajoData, $documentoDescripcion);
+                            error_log("Resultado del envío de correo: " . ($emailResult ? "Exitoso" : "Fallido"));
+                        } catch (Exception $e) {
+                            error_log("Error al enviar correo: " . $e->getMessage());
+                            // No retornamos error aquí para no interrumpir el flujo principal
                         }
-                        
-                        return Response::json(['success' => true, 'message' => 'Legajo actualizado correctamente']);
-                    } catch (Exception $e) {
-                        error_log("Error después de actualizar: " . $e->getMessage());
-                        return Response::json(['error' => 'El legajo se actualizó pero ocurrió un error adicional'], 500);
                     }
+                    
+                    return Response::json(['success' => true, 'message' => 'Legajo actualizado correctamente']);
                 } else {
                     return Response::json(['error' => 'Error al actualizar el legajo'], 500);
                 }
             } catch (Exception $e) {
+                error_log("Error en actualización: " . $e->getMessage());
                 return Response::json(['error' => $e->getMessage()], 400);
             }
         } catch (Exception $e) {
@@ -549,4 +617,24 @@ class LegajoController
             echo json_encode(['error' => 'Error al obtener la lista de legajos: ' . $e->getMessage()]);
         }
     }
+
+    // Add this method to LegajoController.php
+    public static function showCreateForm()
+    {
+        // Verificar si la sesión ya está iniciada
+        if (session_status() == PHP_SESSION_NONE) {
+            session_start();
+        }
+        
+        $usuarioActual = $_SESSION['user_id'] ?? null;
+
+        if (!$usuarioActual) {
+            header('Location: /login');
+            exit;
+        }
+
+        // Load the Create view
+        require_once __DIR__ . '/../Views/Legajo/Create.php';
+    }
+
 }

@@ -1,0 +1,14 @@
+DESTINATARIOS: lhoyos@tema.com.pe, bmunoz@tema.com.pe, lmonroy@tema.com.pe, lmonroy1971@gmail.com
+ASUNTO: Notificación de cambios en Legajo Personal
+CABECERAS:
+From: evidencias.rrhh@temalitoclean.com
+Reply-To: evidencias.rrhh@temalitoclean.com
+X-Mailer: PHP/8.3.12
+CUERPO:
+Trabajador: MONROY SOVERO LUIS FERNANDO
+DNI: 09739991
+Documento: PARTICIPACIÓN UTILIDADES
+Estado: SE SUBIÓ EL DOCUMENTO EMITIDO
+
+Atentamente,
+Aplicación de Evidencias de RRHH

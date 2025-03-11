@@ -288,36 +288,57 @@ $rolUsuario = $_SESSION['role'] ?? 'INVITADO';
             const formData = new FormData(form);
 
             try {
-                const response = await fetch('/legajo/create', {
+                console.log("Enviando formulario...");
+                
+                // Intentar con la ruta /legajo
+                const response = await fetch('/legajo', {
                     method: 'POST',
                     body: formData
                 });
 
-                // Verificar si la respuesta es JSON o no
+                console.log("Respuesta recibida. Status:", response.status);
+                console.log("Headers:", response.headers);
+                
+                // Obtener el tipo de contenido
                 const contentType = response.headers.get('content-type');
+                console.log("Content-Type:", contentType);
+                
+                // Capturar el texto de la respuesta primero
+                const rawText = await response.text();
+                console.log("Respuesta cruda:", rawText);
+                
                 let result;
                 
+                // Intentar parsear como JSON solo si parece un JSON
                 if (contentType && contentType.includes('application/json')) {
-                    result = await response.json();
+                    try {
+                        result = JSON.parse(rawText);
+                        console.log("Respuesta parseada como JSON:", result);
+                    } catch (e) {
+                        console.error("Error al parsear JSON:", e);
+                        showErrorModal("Error en la comunicación con el servidor. La respuesta no es JSON válido.");
+                        return false;
+                    }
                 } else {
-                    // Si no es JSON, convertir a texto y mostrar error
-                    const text = await response.text();
-                    console.error('Respuesta no JSON recibida:', text);
-                    throw new Error('Respuesta del servidor inesperada');
-                }
-
-                if (!response.ok) {
-                    // Mostrar el modal con el mensaje de error
-                    showErrorModal(result.error || 'Error al crear el legajo');
+                    // Si no es JSON, mostrar el error con el texto crudo
+                    console.error("La respuesta no es JSON:", rawText);
+                    showErrorModal("Error en la comunicación con el servidor. Respuesta no válida.");
                     return false;
                 }
 
-                // Si todo sale bien, redirigir a la lista de legajos
-                window.location.href = '/legajo';
-                return false;
+                // Procesar la respuesta
+                if (response.ok && result.success) {
+                    // Éxito - redireccionar
+                    window.location.href = '/legajo';
+                    return false;
+                } else {
+                    // Error con mensaje del servidor
+                    showErrorModal(result.error || 'Error al crear el legajo');
+                    return false;
+                }
             } catch (error) {
+                console.error('Error completo en submitForm:', error);
                 showErrorModal('Error al procesar la solicitud. Por favor, intente nuevamente.');
-                console.error('Error en submitForm:', error);
                 return false;
             }
         }

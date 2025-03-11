@@ -158,21 +158,25 @@ public static function update()
             exit;
         }
     }
-    public static function search($tipo_documento, $n_documento)
+    public static function search()
     {
         // Configurar el encabezado de la respuesta
         header('Content-Type: application/json; charset=utf-8');
-
+    
+        // Obtener parámetros de la URL
+        $tipo_documento = $_GET['tipo_documento'] ?? null;
+        $n_documento = $_GET['n_documento'] ?? null;
+    
         // Validar parámetros
         if (!$tipo_documento || !$n_documento) {
             http_response_code(400); // Código de error Bad Request
             echo json_encode(['error' => 'Debe proporcionar tipo_documento y n_documento']);
             return;
         }
-
+    
         // Buscar colaborador
         $colaborador = Colaborador::findByDocument($tipo_documento, $n_documento);
-
+    
         if ($colaborador) {
             http_response_code(200); // Código de éxito OK
             echo json_encode(['data' => $colaborador]);
